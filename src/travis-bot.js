@@ -25,7 +25,7 @@ class TravisBot {
     this._logInfo(botResults);
 
     if (process.env['TRAVIS'] === 'true' &&
-      pullRequest.toLowerCase() === 'pull_request') {
+      process.env['TRAVIS_EVENT_TYPE'].toLowerCase() === 'pull_request') {
       const repoPieces = process.env['TRAVIS_REPO_SLUG'].split('/');
       const githubHelper = new GithubHelper({
         token: process.env['GIT_TOKEN'],
