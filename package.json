@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/gauntface/web-devrel-bot#readme",
   "dependencies": {
-    "chalk": "^2.0.1"
+    "chalk": "^2.0.1",
+    "github": "^9.2.0"
   }
 }
