@@ -1,51 +1,31 @@
-const LogHelper = require('./log-helper');
-const BotResults = require('./bot-results');
+const logHelper = require('./utils/log-helper');
+const TravisEnvModel = require('./models/travis-env-model');
 
 class TravisBot {
   constructor() {
-    this._logHelper = new LogHelper('TravisBot 🤖');
+    logHelper.setPrimaryPrefix('TravisBot 🤖');
   }
 
   run() {
-    /** this._logHelper.log(`Environment variables`);
-    const environmentVariables = [
-      'TRAVIS',
-      'TRAVIS_PULL_REQUEST',
-      'TRAVIS_PULL_REQUEST_BRANCH',
-      'TRAVIS_TEST_RESULT',
-    ];
-    const keyValues = {};
-    environmentVariables.forEach((varName) => {
-      keyValues[varName] = process.env[varName];
-    });
+    const travisEnv = new TravisEnvModel();
 
-    this._logHelper.logKeyValues(keyValues);**/
-
-    const botResults = new BotResults();
-    this._logInfo(botResults);
-
-    if (process.env['TRAVIS'] === 'true' &&
-      process.env['TRAVIS_EVENT_TYPE'].toLowerCase() === 'pull_request') {
-      const repoPieces = process.env['TRAVIS_REPO_SLUG'].split('/');
+    if (travisEnv.isTravis && travisEnv.isPullRequest) {
       const githubHelper = new GithubHelper({
-        token: process.env['GIT_TOKEN'],
-        owner: repoPieces[0],
-        repo: repoPieces[1],
+        owner: travisEnv.repoDetails.owner,
+        repo: travisEnv.repoDetails.repo,
       });
+
       githubHelper.postComment({
-        sha: process.env['TRAVIS_PULL_REQUEST_SHA'],
+        sha: travisEnv.pullRequestSha,
         comment: `This is an example comment`,
       });
+    } else {
+      this._logDebugInfo();
     }
   }
 
-  _logInfo(botResults) {
-    if (botResults.isSuccessfulBuild) {
-      this._logHelper.log('🎉 Travis build was successful.');
-    } else {
-      this._logHelper.warn('⚠️ Travis build was unsuccessful. ' +
-        'Results may not be valid.');
-    }
+  _logDebugInfo() {
+    logHelper.log('🎉 TODO: Debug Results Locally.');
   }
 }
 

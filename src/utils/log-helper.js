@@ -1,8 +1,12 @@
 const chalk = require('chalk');
 
 class LogHelper {
-  constructor(prefix) {
-    this._prefix = prefix;
+  constructor() {
+    this._prefix;
+  }
+
+  setPrimaryPrefix(newPrefix) {
+    this._prefix = newPrefix;
   }
 
   log() {
@@ -11,6 +15,10 @@ class LogHelper {
 
   warn() {
     console.log(chalk.yellow(`[${this._prefix}]:`), ...arguments);
+  }
+
+  error() {
+    console.log(chalk.red(`[${this._prefix}]:`), ...arguments);
   }
 
   logKeyValues(keyValues) {
@@ -39,4 +47,4 @@ class LogHelper {
   }
 }
 
-module.exports = LogHelper;
+module.exports = new LogHelper();

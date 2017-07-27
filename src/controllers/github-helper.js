@@ -1,8 +1,16 @@
 const GitHubApi = require('github');
+const logHelper = require('../utils/log-helper');
 
 class GithubHelper {
-  constructor({token, owner, repo}) {
+  constructor({owner, repo}) {
     this._github = new GitHubApi();
+
+    const token = process.env['GITHUB_TOKEN'];
+    if (!token) {
+      logHelper.error(`No 'GITHUB_TOKEN' environment variable defined.`);
+      throw new Error(`No 'GITHUB_TOKEN' environment variable defined.`);
+    }
+
     this._github.authenticate({
       type: 'oauth',
       token: token,
