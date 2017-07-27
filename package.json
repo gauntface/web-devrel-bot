@@ -1,6 +1,6 @@
 {
   "name": "travis-bot",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A bot to run after Travis has run it's build's and tests.",
   "bin": {
     "travis-bot": "src/bin/cli.js"
