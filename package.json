@@ -1,0 +1,24 @@
+{
+  "name": "travis-bot",
+  "version": "0.0.2",
+  "description": "A bot to run after Travis has run it's build's and tests.",
+  "bin": {
+    "travis-bot": "src/bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gauntface/web-devrel-bot.git"
+  },
+  "author": "gauntface",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/gauntface/web-devrel-bot/issues"
+  },
+  "homepage": "https://github.com/gauntface/web-devrel-bot#readme",
+  "dependencies": {
+    "chalk": "^2.0.1"
+  }
+}
