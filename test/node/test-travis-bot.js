@@ -1,7 +1,8 @@
 const sinon = require('sinon');
+const path = require('path');
 const expect = require('chai').expect;
 
-const TravisBot = require('../../src/travis-bot');
+const TravisBot = require('../../src/controllers/travis-bot-runner.js');
 
 describe('travis-bot', function() {
   let stubs = [];
@@ -21,7 +22,9 @@ describe('travis-bot', function() {
 
     const logSpy = sinon.spy(bot, '_logDebugInfo');
 
-    return bot.run()
+    return bot.run({
+      configPath: path.join(__dirname, '../static/example.config.js')
+    })
     .then(() => {
       expect(logSpy.calledOnce).to.equal(true);
     });
@@ -37,7 +40,9 @@ describe('travis-bot', function() {
       .callsFake(() => Promise.resolve());
     stubs.push(stub);
 
-    return bot.run()
+    return bot.run({
+      configPath: path.join(__dirname, '../static/example.config.js')
+    })
     .then(() => {
       expect(stub.calledOnce).to.equal(true);
     });
