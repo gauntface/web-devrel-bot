@@ -45,7 +45,8 @@ class TravisBot {
         state: 'success',
       });
     })
-    .catch(() => {
+    .catch((err) => {
+      logHelper.error(err);
       return githubController.postState({
         sha: travisEnv.pullRequestSha,
         state: 'error',
