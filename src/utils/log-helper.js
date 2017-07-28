@@ -9,16 +9,24 @@ class LogHelper {
     this._prefix = newPrefix;
   }
 
+  _getPrefix(color) {
+    if (!this._prefix) {
+      return '';
+    }
+
+    return color(`[${this._prefix}]:`);
+  }
+
   log() {
-    console.log(chalk.green(`[${this._prefix}]:`), ...arguments);
+    console.log(this._getPrefix(chalk.green), ...arguments);
   }
 
   warn() {
-    console.log(chalk.yellow(`[${this._prefix}]:`), ...arguments);
+    console.log(this._getPrefix(chalk.yellow), ...arguments);
   }
 
   error() {
-    console.log(chalk.red(`[${this._prefix}]:`), ...arguments);
+    console.log(this._getPrefix(chalk.red), ...arguments);
   }
 
   logKeyValues(keyValues) {

@@ -1,5 +1,6 @@
 const logHelper = require('./utils/log-helper');
 const TravisEnvModel = require('./models/travis-env-model');
+const GithubController = require('./controllers/github-controller');
 
 class TravisBot {
   constructor() {
@@ -11,39 +12,44 @@ class TravisBot {
 
     if (!travisEnv.isTravis || !travisEnv.isPullRequest) {
       this._logDebugInfo();
+      return Promise.resolve();
     }
 
-    const githubHelper = new GithubHelper({
+    return this._logGithubState();
+  }
+
+  _logDebugInfo() {
+    logHelper.log('🎉 TODO: Debug Results Locally.');
+  }
+
+  _logGithubState() {
+    const githubController = new GithubController({
       owner: travisEnv.repoDetails.owner,
       repo: travisEnv.repoDetails.repo,
     });
 
-    return githubHelper.postState({
+    return githubController.postState({
       sha: travisEnv.pullRequestSha,
       state: 'pending',
     })
     .then(() => {
-      return githubHelper.postComment({
+      return githubController.postComment({
         sha: travisEnv.pullRequestSha,
         comment: `This is an example comment`,
       });
     })
     .then(() => {
-      return githubHelper.postState({
+      return githubController.postState({
         sha: travisEnv.pullRequestSha,
         state: 'success',
       });
     })
     .catch(() => {
-      return githubHelper.postState({
+      return githubController.postState({
         sha: travisEnv.pullRequestSha,
         state: 'error',
       });
     });
-  }
-
-  _logDebugInfo() {
-    logHelper.log('🎉 TODO: Debug Results Locally.');
   }
 }
 

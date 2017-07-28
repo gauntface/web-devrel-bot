@@ -21,5 +21,8 @@
   "dependencies": {
     "chalk": "^2.0.1",
     "github": "^9.2.0"
+  },
+  "devDependencies": {
+    "sinon": "^2.4.1"
   }
 }
