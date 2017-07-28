@@ -19,11 +19,12 @@ class GithubController {
     this._repo = repo;
   }
 
-  postComment({sha, comment}) {
-    return this._github.repos.createCommitComment({
+  postComment({number, sha, comment}) {
+    return this._github.pullRequests.createComment({
       owner: this._owner,
       repo: this._repo,
-      sha: sha,
+      number,
+      sha,
       body: comment
     });
   }

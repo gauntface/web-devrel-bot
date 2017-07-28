@@ -83,6 +83,21 @@ describe('travis-env-model', function() {
     expect(travisEnv.pullRequestSha).to.equal(injectedSha);
   });
 
+  it('no PR number', function() {
+    delete process.env['TRAVIS_PULL_REQUEST'];
+
+    const travisEnv = new TravisEnvModel();
+    expect(travisEnv.pullRequestNumber).to.equal(undefined);
+  });
+
+  it('get PR number', function() {
+    const injectedPR = '123456';
+    process.env['TRAVIS_PULL_REQUEST'] = injectedPR;
+
+    const travisEnv = new TravisEnvModel();
+    expect(travisEnv.pullRequestNumber).to.equal(injectedPR);
+  });
+
   it('no test results', function() {
     delete process.env['TRAVIS_TEST_RESULT'];
 

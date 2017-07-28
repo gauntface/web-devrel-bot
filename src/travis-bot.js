@@ -34,6 +34,7 @@ class TravisBot {
     })
     .then(() => {
       return githubController.postComment({
+        number: travisEnv.pullRequestNumber,
         sha: travisEnv.pullRequestSha,
         comment: `This is an example comment`,
       });

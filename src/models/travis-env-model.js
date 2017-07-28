@@ -27,6 +27,14 @@ class TravisEnvModel {
     return process.env['TRAVIS_PULL_REQUEST_SHA'];
   }
 
+  get pullRequestNumber() {
+    if (process.env['TRAVIS_PULL_REQUEST'] === 'false') {
+      return undefined;
+    }
+
+    return process.env['TRAVIS_PULL_REQUEST'];
+  }
+
   get isSuccessfulTravisRun() {
     const testResult = process.env['TRAVIS_TEST_RESULT'];
     if (typeof testResult === 'undefined') {
