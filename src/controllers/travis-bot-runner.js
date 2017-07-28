@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const logHelper = require('../utils/log-helper');
-const getChangedFiles = require('../utils/git-changed-files');
+const GitChangedFiles = require('../utils/git-changed-files');
 const TravisEnvModel = require('../models/travis-env-model');
 const GithubController = require('./github-controller');
 
@@ -31,7 +31,7 @@ class TravisBot {
         throw new Error(`A problem occurred running the config file.`);
       }
 
-      return getChangedFiles(travisEnv, process.cwd())
+      return GitChangedFiles.get(travisEnv, process.cwd())
       .then((changedFiles) => {
         return this._runPlugins(configuration.plugins, changedFiles)
         .catch((err) => {
@@ -93,12 +93,11 @@ class TravisBot {
       repo: travisEnv.repoDetails.repo,
     });
 
-    let githubComment = `# Info from travis-bot\n\n`;
+    let githubComment = `# Results from Plugins\n\n`;
     const pluginNames = Object.keys(pluginResults);
     pluginNames.forEach((pluginName) => {
       const result = pluginResults[pluginName];
-      let statusEmoji = result.passed ? '🎉' : '☠️';
-      githubComment += `## ${statusEmoji} '${pluginName}'\n\n`;
+      githubComment += `## ${pluginName}\n\n`;
       githubComment += result.markdownLog;
       githubComment += `\n\n`;
     });

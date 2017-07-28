@@ -9,7 +9,7 @@ const NEGATIVE_EMOJI = '🚫';
 
 class SizePlugin extends PluginInterface {
   constructor({globPattern, globOptions} = {}) {
-    super('travis-bot.plugins.Size');
+    super('Travis-Bot Size Plugin');
 
     this._globPattern = globPattern;
     this._globOptions = globOptions;
@@ -17,7 +17,7 @@ class SizePlugin extends PluginInterface {
 
   run({changedFiles} = {}) {
     if (!this._globPattern) {
-      throw new Error(`The 'travis-bot.plugins.size' plugin requires a ` +
+      throw new Error(`The '${this.name}' requires a ` +
         `'globPattern' parameter in the constructor.`);
     }
 
@@ -38,11 +38,15 @@ class SizePlugin extends PluginInterface {
           return fs.stat(filePath)
           .then((stats) => {
             const relativePath = path.relative(process.cwd(), filePath);
+            let changedFromMainBranch = false;
+            if (changedFiles) {
+              changedFromMainBranch = changedFiles.includes(relativePath);
+            }
             fileInfoArray.push({
               fullPath: filePath,
               relativePath: relativePath,
               sizeInBytes: stats.size,
-              changedFromMainBranch: changedFiles.includes(relativePath),
+              changedFromMainBranch,
             });
             return fileInfoArray;
           });
@@ -61,14 +65,14 @@ class SizePlugin extends PluginInterface {
     });
   }
 
-  _convertSize(sizeInBytes) {
+  static _convertSize(sizeInBytes) {
     let fileSize = sizeInBytes;
     let unit = 'B';
-    if (fileSize > 1000) {
+    if (fileSize >= 1000) {
       unit = 'KB';
       fileSize = fileSize / 1000;
 
-      if (fileSize > 1000) {
+      if (fileSize >= 1000) {
         unit = 'MB';
         fileSize = fileSize / 1000;
       }
@@ -83,9 +87,15 @@ class SizePlugin extends PluginInterface {
   getPrettyLogResults(allFileInfo) {
     let log = '';
 
-    const changedFileInfo = allFileInfo.filter((fileInfo) => {
+    let changedFileInfo = allFileInfo.filter((fileInfo) => {
       return fileInfo.changedFromMainBranch;
     });
+
+    let title = `Changed File Sizes\n-------------\n`;
+    if (changedFileInfo.length === 0) {
+      title = `File Sizes\n-------------\n`;
+      changedFileInfo = allFileInfo;
+    }
 
     const fileSizes = {};
     let longestSizeLength = 0;
@@ -95,7 +105,7 @@ class SizePlugin extends PluginInterface {
         longestPathLength = fileInfo.relativePath.length;
       }
 
-      const sizeDetails = this._convertSize(fileInfo.sizeInBytes);
+      const sizeDetails = SizePlugin._convertSize(fileInfo.sizeInBytes);
       fileSizes[fileInfo.relativePath] = `${sizeDetails.size} ${sizeDetails.unit}`;
 
       if (fileSizes[fileInfo.relativePath].length > longestSizeLength) {
@@ -112,7 +122,7 @@ class SizePlugin extends PluginInterface {
       return `${chalk.yellow(pathString)}  ${chalk.blue(fileSizes[fileInfo.relativePath])}`;
     }).join('\n');
 
-    log += chalk.grey(`Changed Files\n-------------\n`);
+    log += chalk.grey(title);
     log += changedFilesTable;
 
     return log;
@@ -123,7 +133,7 @@ class SizePlugin extends PluginInterface {
     tableString += `| --- | --- | --- | --- |\n`;
 
     tableString += arrayOfFileInfo.map((fileInfo) => {
-      const sizeDetails = this._convertSize(fileInfo.sizeInBytes);
+      const sizeDetails = SizePlugin._convertSize(fileInfo.sizeInBytes);
       const sizeChangeEmoji = '';
       return `| ${sizeChangeEmoji} | ${fileInfo.relativePath} | ${sizeDetails.size} | ${sizeDetails.unit} |`;
     }).join('\n');
@@ -136,15 +146,18 @@ class SizePlugin extends PluginInterface {
       return fileInfo.changedFromMainBranch;
     });
 
-    let changedSizeTable = this._generateMDFileSizeTable(changedFileInfo);
+    let changedSizeTable = 'None of the files caught by the config file have been changed.';
+    if (changedFileInfo.length > 0) {
+      changedSizeTable = `### Changed File Sizes\n\n`;
+      changedSizeTable += this._generateMDFileSizeTable(changedFileInfo);
+    }
+
     let fullSizeTable = this._generateMDFileSizeTable(allFileInfo);
 
-    return `### Changed File Sizes
-
-${changedSizeTable}
+    return `${changedSizeTable}
 
 <details>
-<summary>Full File List</summary>
+<summary>Full List of File Sizes</summary>
 
 ${fullSizeTable}
 
