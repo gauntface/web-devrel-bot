@@ -55,7 +55,7 @@ class TravisBot {
     return plugins.reduce((promiseChain, plugin) => {
       logHelper.log(`Running Plugins....`);
       return promiseChain.then(() => {
-        logHelper.log(`  '${plugin.name}'`);
+        logHelper.log(`  ${plugin.name}`);
         return plugin.run({changedFiles})
         .then((result) => {
           if (!plugin.name) {
@@ -73,14 +73,12 @@ class TravisBot {
   }
 
   _logDebugInfo(pluginResults) {
+    logHelper.log(`Results from plugins`);
+
     const pluginNames = Object.keys(pluginResults);
     pluginNames.forEach((pluginName) => {
       const result = pluginResults[pluginName];
-      let statusEmoji = result.passed ? '🎉' : '☠️';
-
-      logHelper.log(`Results from '${pluginName}'.`);
-      logHelper.log(`  Status: ${statusEmoji}`);
-
+      logHelper.log(`  ${pluginName}`);
       console.log('');
       console.log(result.prettyLog);
       console.log('');
