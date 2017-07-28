@@ -3,7 +3,7 @@ const exec = require('child_process').exec;
 module.exports = (travisEnv, cwd) => {
   let gitBranchDiff = `$(git merge-base master HEAD)`;
   if (travisEnv.isTravis) {
-    gitBranchDiff = `FETCH_HEAD $(git merge-base FETCH_HEAD master)`;
+    gitBranchDiff = `FETCH_HEAD $(git merge-base FETCH_HEAD ${travisEnv.gitBranch})`;
   }
 
   const command = `git --no-pager diff --name-only ` +

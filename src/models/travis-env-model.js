@@ -23,6 +23,10 @@ class TravisEnvModel {
     }
   }
 
+  get gitBranch() {
+    return process.env['TRAVIS_BRANCH'];
+  }
+
   get pullRequestSha() {
     return process.env['TRAVIS_PULL_REQUEST_SHA'];
   }
