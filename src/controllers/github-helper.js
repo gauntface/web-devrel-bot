@@ -28,6 +28,18 @@ class GithubHelper {
       body: comment
     });
   }
+
+  postState({sha, state}) {
+    return this._github.repos.createStatus({
+      owner: this._owner,
+      repo: this._repo,
+      sha: sha,
+      state,
+      context: 'Travis Bot',
+      description: 'Travis Bot is a basic helper to report and enforce rules ' +
+        'on a Github Pull Request.'
+    });
+  }
 }
 
 module.exports = GithubHelper;
