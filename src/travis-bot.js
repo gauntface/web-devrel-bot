@@ -15,14 +15,14 @@ class TravisBot {
       return Promise.resolve();
     }
 
-    return this._logGithubState();
+    return this._logGithubState(travisEnv);
   }
 
   _logDebugInfo() {
     logHelper.log('🎉 TODO: Debug Results Locally.');
   }
 
-  _logGithubState() {
+  _logGithubState(travisEnv) {
     const githubController = new GithubController({
       owner: travisEnv.repoDetails.owner,
       repo: travisEnv.repoDetails.repo,
