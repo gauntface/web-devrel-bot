@@ -20,7 +20,7 @@ class GithubController {
   }
 
   postComment({number, comment}) {
-    return this._github.pullRequests.createCommentReply({
+    return this._github.issues.createComment({
       owner: this._owner,
       repo: this._repo,
       number,
