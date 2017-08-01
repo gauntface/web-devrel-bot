@@ -246,7 +246,7 @@ ${changedTable}
 ${newTable}
 
 <details>
-<summary>All File</summary>
+<summary>All Files</summary>
 
 ${fullTable}
 

@@ -87,7 +87,7 @@ new-file.txt  21 B
 | new-file.txt | 21 B |
 
 <details>
-<summary>All File</summary>
+<summary>All Files</summary>
 
 | File | Before | After | Change |  |
 | --- | --- | --- | --- | --- |
@@ -140,7 +140,7 @@ No file sizes have changed.
 No new files have been added.
 
 <details>
-<summary>All File</summary>
+<summary>All Files</summary>
 
 | File | Before | After | Change |  |
 | --- | --- | --- | --- | --- |
