@@ -23,6 +23,8 @@ class TravisEnvModel {
     }
   }
 
+  // The target branch of the pull request OR the current
+  // branch that is commited to.
   get gitBranch() {
     return process.env['TRAVIS_BRANCH'];
   }
@@ -32,7 +34,7 @@ class TravisEnvModel {
   }
 
   get pullRequestNumber() {
-    if (process.env['TRAVIS_PULL_REQUEST'] === 'false') {
+    if (!process.env['TRAVIS_PULL_REQUEST'] || process.env['TRAVIS_PULL_REQUEST'] === 'false') {
       return undefined;
     }
 

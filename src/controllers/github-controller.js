@@ -10,6 +10,7 @@ class GithubController {
     }
 
     this._github = new GitHubApi();
+    // Can this be type of 'token' ?
     this._github.authenticate({
       type: 'oauth',
       token: token,
@@ -19,7 +20,10 @@ class GithubController {
     this._repo = repo;
   }
 
-  postComment({number, comment}) {
+  /**
+   * Pull requests are treated as issues by the Github API.
+   */
+  postIssueComment({number, comment}) {
     return this._github.issues.createComment({
       owner: this._owner,
       repo: this._repo,
@@ -28,6 +32,10 @@ class GithubController {
     });
   }
 
+  /**
+   * This will show up in PR's as the current state (same place as Travis
+   * status can block a PR.)
+   */
   postState({sha, state}) {
     return this._github.repos.createStatus({
       owner: this._owner,
@@ -37,6 +45,32 @@ class GithubController {
       context: 'Travis Bot',
       description: 'Travis Bot is a basic helper to report and enforce rules ' +
         'on a Github Pull Request.'
+    });
+  }
+
+  /**
+   * Get the details for a specific PR
+   */
+  getPRDetails({number}) {
+    return this._github.pullRequests.get({
+      owner: this._owner,
+      repo: this._repo,
+      number,
+    });
+  }
+
+  getRepoDetails() {
+    return this._github.repos.get({
+      owner: this._owner,
+      repo: this._repo,
+    });
+  }
+
+  getBranchDetails({branch}) {
+    return this._github.repos.getBranch({
+      owner: this._owner,
+      repo: this._repo,
+      branch,
     });
   }
 }

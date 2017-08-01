@@ -5,5 +5,11 @@ module.exports = {
     owner: 'gauntface',
     repo: 'travis-bot',
   },
-  plugins: []
+  plugins: [
+    {
+      run: () => {
+        return Promise.resolve();
+      },
+    }
+  ]
 };

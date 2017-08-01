@@ -118,4 +118,41 @@ describe('travis-env-model', function() {
     const travisEnv = new TravisEnvModel();
     expect(travisEnv.isSuccessfulTravisRun).to.equal(true);
   });
+
+  it('should return undefined for no git branch', function() {
+    delete process.env['TRAVIS_BRANCH'];
+
+    const travisEnv = new TravisEnvModel();
+    expect(travisEnv.gitBranch).to.equal(undefined);
+  });
+
+  it('should return git branch', function() {
+    const branch = 'my-random-branch';
+    process.env['TRAVIS_BRANCH'] = branch;
+
+    const travisEnv = new TravisEnvModel();
+    expect(travisEnv.gitBranch).to.equal(branch);
+  });
+
+  it('should return undefined for PR num', function() {
+    delete process.env['TRAVIS_PULL_REQUEST'];
+
+    const travisEnv = new TravisEnvModel();
+    expect(travisEnv.pullRequestNumber).to.equal(undefined);
+  });
+
+  it('should return undefined for PR num === false', function() {
+    process.env['TRAVIS_PULL_REQUEST'] = 'false';
+
+    const travisEnv = new TravisEnvModel();
+    expect(travisEnv.pullRequestNumber).to.equal(undefined);
+  });
+
+  it('should return the PR num', function() {
+    const prNum = '123';
+    process.env['TRAVIS_PULL_REQUEST'] = prNum;
+
+    const travisEnv = new TravisEnvModel();
+    expect(travisEnv.pullRequestNumber).to.equal(prNum);
+  });
 });

@@ -2,6 +2,7 @@
 
 const meow = require('meow');
 const path = require('path');
+const logHelper = require('../src/utils/log-helper');
 const TravisBotRunner = require('../src/controllers/travis-bot-runner');
 
 const cli = meow(`
@@ -25,5 +26,9 @@ if (cli.flags.config) {
   options.configPath = path.resolve(cli.flags.config);
 }
 
-const travisBotRuner = new TravisBotRunner();
-travisBotRuner.run(options);
+const travisBotRuner = new TravisBotRunner(options);
+travisBotRuner.run()
+.catch((err) => {
+  logHelper.error(err);
+  process.exit(1);
+});

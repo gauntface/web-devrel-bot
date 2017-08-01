@@ -15,15 +15,64 @@ class SizePlugin extends PluginInterface {
     this._globOptions = globOptions;
   }
 
-  run({changedFiles} = {}) {
+  run({beforePath, afterPath} = {}) {
     if (!this._globPattern) {
       throw new Error(`The '${this.name}' requires a ` +
         `'globPattern' parameter in the constructor.`);
     }
 
+    return Promise.all([
+      this._getFileDetails(beforePath),
+      this._getFileDetails(afterPath),
+    ])
+    .then((results) => {
+      const beforeFiles = results[0];
+      const afterFiles = results[1];
+
+      const newFileList = [];
+
+      Object.keys(afterFiles).forEach((relativePathKey) => {
+        const fileDetails = afterFiles[relativePathKey];
+
+        const afterDetails = afterFiles[relativePathKey];
+        const beforeDetails = beforeFiles[relativePathKey];
+
+        // If there was a previous file but it's size was 0,
+        // treat it as a new file (avoids the divide by zero issue with)
+        // calculating sizeDiff
+        fileDetails.isNewFile = (typeof beforeDetails === 'undefined');
+
+        if (!fileDetails.isNewFile) {
+          fileDetails.previousSize = beforeDetails.sizeInBytes;
+          fileDetails.sizeDifferenceInBytes =
+            afterDetails.sizeInBytes - beforeDetails.sizeInBytes;
+          fileDetails.sizeDifferencePercent =
+              (afterDetails.sizeInBytes / beforeDetails.sizeInBytes) - 1;
+        } else {
+          fileDetails.previousSize = null;
+          fileDetails.sizeDifferenceInBytes = NaN;
+          fileDetails.sizeDifferencePercent = NaN;
+        }
+
+        newFileList.push(fileDetails);
+      });
+
+      return newFileList;
+    })
+    .then((allFileInfo) => {
+      return {
+        prettyLog: this.getPrettyLogResults(allFileInfo),
+        markdownLog: this.getMarkdownResults(allFileInfo),
+      };
+    });
+  }
+
+  _getFileDetails(directory) {
     return new Promise((resolve, reject) => {
       const globOptions = this._globOptions || {};
       globOptions.absolute = true;
+      globOptions.cwd = directory;
+      globOptions.root = directory;
 
       glob(this._globPattern, globOptions, (err, matches) => {
         if (err) {
@@ -32,36 +81,20 @@ class SizePlugin extends PluginInterface {
         resolve(matches);
       });
     })
-    .then((files) => {
-      return files.reduce((promiseChain, filePath) => {
-        return promiseChain.then((fileInfoArray) => {
+    .then((filePaths) => {
+      return filePaths.reduce((promiseChain, filePath) => {
+        return promiseChain.then((fileInfo) => {
           return fs.stat(filePath)
           .then((stats) => {
-            const relativePath = path.relative(process.cwd(), filePath);
-            let changedFromMainBranch = false;
-            if (changedFiles) {
-              changedFromMainBranch = changedFiles.includes(relativePath);
-            }
-            fileInfoArray.push({
-              fullPath: filePath,
-              relativePath: relativePath,
-              sizeInBytes: stats.size,
-              changedFromMainBranch,
-            });
-            return fileInfoArray;
+            const relativePath = path.relative(directory, filePath);
+            fileInfo[relativePath] = {
+              relativePath,
+              sizeInBytes: stats.size
+            };
+            return fileInfo;
           });
         });
-      }, Promise.resolve([]));
-    })
-    .then((allFileInfo) => {
-      return {
-        passed: true,
-        prettyLog: this.getPrettyLogResults(allFileInfo),
-        markdownLog: this.getMarkdownResults(allFileInfo),
-        details: {
-          files: allFileInfo,
-        }
-      };
+      }, Promise.resolve({}));
     });
   }
 
@@ -85,83 +118,168 @@ class SizePlugin extends PluginInterface {
   }
 
   getPrettyLogResults(allFileInfo) {
-    let log = '';
-
     let changedFileInfo = allFileInfo.filter((fileInfo) => {
-      return fileInfo.changedFromMainBranch;
+      return fileInfo.isNewFile === false && (fileInfo.sizeDifferenceInBytes !== 0);
     });
 
-    let title = `Changed File Sizes\n-------------\n`;
-    if (changedFileInfo.length === 0) {
-      title = `File Sizes\n-------------\n`;
-      changedFileInfo = allFileInfo;
+    const changedFileRows = changedFileInfo.map((fileInfo) => {
+      const newSizeDetails = SizePlugin._convertSize(fileInfo.sizeInBytes);
+      const prevSizeDetails = SizePlugin._convertSize(fileInfo.previousSize);
+
+      let percentChangeColor = chalk.dim;
+      if (fileInfo.sizeDifferencePercent >= 0.1) {
+        percentChangeColor = chalk.red;
+      } else if (fileInfo.sizeDifferencePercent <= -0.1) {
+        percentChangeColor = chalk.green;
+      }
+
+      let prettyFloat = parseFloat(fileInfo.sizeDifferencePercent * 100)
+        .toFixed(2);
+        let prefix = '';
+        if (fileInfo.sizeDifferencePercent > 0) {
+          prefix = '+';
+        }
+      let percentString = percentChangeColor(`${prefix}${prettyFloat}%`);
+
+      return [
+        chalk.yellow(fileInfo.relativePath),
+        chalk.dim(`${prevSizeDetails.size} ${prevSizeDetails.unit}`),
+        chalk.dim(`>`),
+        chalk.blue(`${newSizeDetails.size} ${newSizeDetails.unit}`),
+        percentString
+      ];
+    });
+
+    let newFileInfo = allFileInfo.filter((fileInfo) => {
+      return fileInfo.isNewFile;
+    });
+
+    let newFileRows = newFileInfo.map((fileInfo) => {
+      const newSizeDetails = SizePlugin._convertSize(fileInfo.sizeInBytes);
+
+      return [
+        chalk.yellow(fileInfo.relativePath),
+        chalk.blue(`${newSizeDetails.size} ${newSizeDetails.unit}`),
+      ];
+    });
+
+    let changedTable = this.createLogTable(changedFileRows);
+    let newTable = this.createLogTable(newFileRows);
+
+    if (!changedTable) {
+      changedTable = 'No file sizes have changed.';
     }
 
-    const fileSizes = {};
-    let longestSizeLength = 0;
-    let longestPathLength = 0;
-    changedFileInfo.forEach((fileInfo) => {
-      if (fileInfo.relativePath.length > longestPathLength) {
-        longestPathLength = fileInfo.relativePath.length;
-      }
+    if (!newTable) {
+      newTable = 'No new files have been added.';
+    }
 
-      const sizeDetails = SizePlugin._convertSize(fileInfo.sizeInBytes);
-      fileSizes[fileInfo.relativePath] = `${sizeDetails.size} ${sizeDetails.unit}`;
+    const changedTitle = 'Changed File Sizes';
+    const changedTitleBar = '-'.repeat(changedTitle.length)
+    const allChangedTable = [changedTitle, changedTitleBar, changedTable]
+      .join('\n');
 
-      if (fileSizes[fileInfo.relativePath].length > longestSizeLength) {
-        longestSizeLength = fileSizes[fileInfo.relativePath].length;
-      }
-    });
+    const newTitle = 'New Files';
+    const newTitleBar = '-'.repeat(newTitle.length)
+    const allNewTable = [newTitle, newTitleBar, newTable]
+      .join('\n');
 
-    const changedFilesTable = changedFileInfo.map((fileInfo) => {
-      const spaceLength = longestPathLength - fileInfo.relativePath.length;
-      let pathString = fileInfo.relativePath;
-      for (let i = 0; i < spaceLength; i++) {
-        pathString += ' ';
-      }
-      return `${chalk.yellow(pathString)}  ${chalk.blue(fileSizes[fileInfo.relativePath])}`;
-    }).join('\n');
-
-    log += chalk.grey(title);
-    log += changedFilesTable;
-
-    return log;
-  }
-
-  _generateMDFileSizeTable(arrayOfFileInfo) {
-    let tableString = `| | File Path | File Size | Units |\n`;
-    tableString += `| --- | --- | --- | --- |\n`;
-
-    tableString += arrayOfFileInfo.map((fileInfo) => {
-      const sizeDetails = SizePlugin._convertSize(fileInfo.sizeInBytes);
-      const sizeChangeEmoji = '';
-      return `| ${sizeChangeEmoji} | ${fileInfo.relativePath} | ${sizeDetails.size} | ${sizeDetails.unit} |`;
-    }).join('\n');
-
-    return tableString;
+    return '\n' + [allChangedTable, allNewTable].join('\n\n') + '\n';
   }
 
   getMarkdownResults(allFileInfo) {
-    const changedFileInfo = allFileInfo.filter((fileInfo) => {
-      return fileInfo.changedFromMainBranch;
+    let changedHeadings = [
+      'File',
+      'Before',
+      'After',
+      'Change',
+      ''
+    ];
+
+    let changedFileInfo = allFileInfo.filter((fileInfo) => {
+      return fileInfo.isNewFile === false && (fileInfo.sizeDifferenceInBytes !== 0);
     });
 
-    let changedSizeTable = 'None of the files caught by the config file have been changed.';
-    if (changedFileInfo.length > 0) {
-      changedSizeTable = `### Changed File Sizes\n\n`;
-      changedSizeTable += this._generateMDFileSizeTable(changedFileInfo);
+    const changedFileRows = this._getMDFileRows(changedFileInfo);
+    const fullFileRows = this._getMDFileRows(allFileInfo);
+
+    let newHeadings = [
+      'File',
+      'Size',
+    ];
+
+    let newFileInfo = allFileInfo.filter((fileInfo) => {
+      return fileInfo.isNewFile;
+    });
+
+    let newFileRows = newFileInfo.map((fileInfo) => {
+      const newSizeDetails = SizePlugin._convertSize(fileInfo.sizeInBytes);
+
+      return [
+        fileInfo.relativePath,
+        `${newSizeDetails.size} ${newSizeDetails.unit}`,
+      ];
+    });
+
+    let changedTable = this.createMDTable(changedHeadings, changedFileRows);
+    let newTable = this.createMDTable(newHeadings, newFileRows);
+    let fullTable = this.createMDTable(changedHeadings, fullFileRows);
+
+    if (!changedTable) {
+      changedTable = 'No file sizes have changed.';
     }
 
-    let fullSizeTable = this._generateMDFileSizeTable(allFileInfo);
+    if (!newTable) {
+      newTable = 'No new files have been added.';
+    }
 
-    return `${changedSizeTable}
+    return `## Changed File Sizes
+
+${changedTable}
+
+## New Files
+
+${newTable}
 
 <details>
-<summary>Full List of File Sizes</summary>
+<summary>All File</summary>
 
-${fullSizeTable}
+${fullTable}
 
 </details>`;
+  }
+
+  _getMDFileRows(fileDetails) {
+    return fileDetails.map((fileInfo) => {
+      const newSizeDetails = SizePlugin._convertSize(fileInfo.sizeInBytes);
+      const prevSizeDetails = SizePlugin._convertSize(fileInfo.previousSize);
+
+      let percentString = '';
+      if (!isNaN(fileInfo.sizeDifferencePercent)) {
+        let prettyFloat = parseFloat(fileInfo.sizeDifferencePercent * 100)
+          .toFixed(2);
+          let prefix = '';
+          if (fileInfo.sizeDifferencePercent > 0) {
+            prefix = '+';
+          }
+        percentString = `${prefix}${prettyFloat}%`;
+      }
+
+      let emoji = '';
+      if (fileInfo.sizeDifferencePercent > 0.1) {
+        emoji = '☠️';
+      } else if(fileInfo.sizeDifferencePercent < -0.1) {
+        emoji = '🎉';
+      }
+
+      return [
+        fileInfo.relativePath,
+        `${prevSizeDetails.size} ${prevSizeDetails.unit}`,
+        `${newSizeDetails.size} ${newSizeDetails.unit}`,
+        percentString,
+        emoji
+      ];
+    });
   }
 }
 

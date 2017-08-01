@@ -58,3 +58,4 @@ typings/
 .env
 
 test/static/github-access-token.js
+coverage/
