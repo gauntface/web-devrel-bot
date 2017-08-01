@@ -85,6 +85,7 @@ class GithubController {
       const userIssues = issueComments.filter((issueComment) => {
         return (issueComment.user.login === botName);
       });
+
     });
   }
 }
