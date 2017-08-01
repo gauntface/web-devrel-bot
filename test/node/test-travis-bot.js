@@ -120,16 +120,47 @@ describe('travis-bot', function() {
     process.env['TRAVIS_EVENT_TYPE'] = 'pull_request';
     process.env['TRAVIS_PULL_REQUEST'] = '123';
 
-    const stub = sinon.stub(FakeGithubController.prototype, 'postIssueComment').callsFake((input) => {
+    const deleteStub = sinon.stub(FakeGithubController.prototype, 'deletePreviousIssueComments').callsFake((input) => {
+      expect(input).to.deep.equal({
+        number: '123',
+        botName: 'test-bot'
+      });
+      return Promise.resolve();
+    });
+    stubs.push(deleteStub);
+
+    const issueStub = sinon.stub(FakeGithubController.prototype, 'postIssueComment').callsFake((input) => {
       expect(input).to.deep.equal({
         number: '123',
         comment: '# Results from Plugins\n\n## Good Plugin.\n\nThis plugin provided no markdown output.\n\n## Good Plugin 2.\n\n`Hello  from good plugin.`\n\n'
       });
+      return Promise.resolve();
     });
-    stubs.push(stub);
+    stubs.push(issueStub);
 
     const bot = new TravisBot({
       configPath: path.join(__dirname, '../static/example-with-plugin.config.js')
+    });
+
+    return bot.run();
+  });
+
+  it('should try to print to Github without deleting previous comments', function() {
+    process.env['TRAVIS'] = 'true';
+    process.env['TRAVIS_EVENT_TYPE'] = 'pull_request';
+    process.env['TRAVIS_PULL_REQUEST'] = '123';
+
+    const issueStub = sinon.stub(FakeGithubController.prototype, 'postIssueComment').callsFake((input) => {
+      expect(input).to.deep.equal({
+        number: '123',
+        comment: '# Results from Plugins\n\n## Good Plugin.\n\nThis plugin provided no markdown output.\n\n## Good Plugin 2.\n\n`Hello  from good plugin.`\n\n'
+      });
+      return Promise.resolve();
+    });
+    stubs.push(issueStub);
+
+    const bot = new TravisBot({
+      configPath: path.join(__dirname, '../static/example-with-plugin-no-bot-name.config.js')
     });
 
     return bot.run();

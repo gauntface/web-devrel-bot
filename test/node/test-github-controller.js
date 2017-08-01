@@ -201,4 +201,48 @@ describe('github-controller', function() {
       branch: 'branchName',
     });
   });
+
+  it('should remove previous bot comments', function() {
+    const EXAMPLE_BOT_NAME = `example-bot-name`;
+    const controller = new GithubController({owner: 'example-owner', repo: 'example-repo'});
+
+    const getStub = sinon.stub(controller._github.issues, 'getComments').callsFake(() => {
+      return Promise.resolve({
+        data: [
+          {
+            id: '1',
+            user: {
+              login: EXAMPLE_BOT_NAME
+            }
+          },
+          {
+            id: '2',
+            user: {
+              login: 'someone-else'
+            }
+          },
+          {
+            id: '3',
+            user: {
+              login: EXAMPLE_BOT_NAME
+            }
+          }
+        ]
+      });
+    });
+    stubs.push(getStub);
+
+    const deleteStub = sinon.stub(controller._github.issues, 'deleteComment').callsFake((input) => {
+      if (input.id !== '1' && input.id !== '3') {
+        return Promise.reject(`Unexpected ID deleted: ${input.id}`);
+      }
+      return Promise.resolve();
+    });
+    stubs.push(deleteStub);
+
+    return controller.deletePreviousIssueComments({
+      number: '1',
+      botName: EXAMPLE_BOT_NAME
+    });
+  });
 });

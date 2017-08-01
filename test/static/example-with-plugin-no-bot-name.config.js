@@ -1,7 +1,6 @@
 const travisbot = require('../../src/npm-module.js');
 
 module.exports = {
-  botUsername: 'test-bot',
   repoDetails: {
     owner: 'gauntface',
     repo: 'travis-bot',

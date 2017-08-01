@@ -82,10 +82,16 @@ class GithubController {
     })
     .then((issueCommentsData) => {
       const issueComments = issueCommentsData.data;
-      const userIssues = issueComments.filter((issueComment) => {
+      const botIssues = issueComments.filter((issueComment) => {
         return (issueComment.user.login === botName);
       });
-
+      const deletePromises = botIssues.map((botIssue) => {
+        return this._github.issues.deleteComment({
+          id: botIssue.id,
+          owner: this._owner,
+          repo: this._repo,
+        });
+      });
     });
   }
 }
