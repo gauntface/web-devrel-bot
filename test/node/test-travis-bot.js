@@ -11,7 +11,7 @@ class FakeGithubController {
       }
     });
   }
-  postComment(options) {
+  postIssueComment(options) {
     console.log(options);
   }
 }
@@ -120,7 +120,7 @@ describe('travis-bot', function() {
     process.env['TRAVIS_EVENT_TYPE'] = 'pull_request';
     process.env['TRAVIS_PULL_REQUEST'] = '123';
 
-    const stub = sinon.stub(FakeGithubController.prototype, 'postComment').callsFake((input) => {
+    const stub = sinon.stub(FakeGithubController.prototype, 'postIssueComment').callsFake((input) => {
       expect(input).to.deep.equal({
         number: '123',
         comment: '# Results from Plugins\n\n## Good Plugin.\n\nThis plugin provided no markdown output.\n\n## Good Plugin 2.\n\n`Hello  from good plugin.`\n\n'

@@ -176,7 +176,7 @@ class TravisBot {
       githubComment += `\n\n`;
     });
 
-    return githubController.postComment({
+    return githubController.postIssueComment({
       number: travisEnv.pullRequestNumber,
       comment: githubComment,
     });
