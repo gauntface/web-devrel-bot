@@ -147,7 +147,7 @@ class SizePlugin extends PluginInterface {
 
       return [
         chalk.yellow(fileInfo.relativePath),
-        prevSizeDetails ? chalk.dim(`${prevSizeDetails.size} ${prevSizeDetails.unit}`): '',
+        chalk.dim(`${prevSizeDetails.size} ${prevSizeDetails.unit}`),
         chalk.dim(`>`),
         chalk.blue(`${newSizeDetails.size} ${newSizeDetails.unit}`),
         percentString
