@@ -73,6 +73,20 @@ class GithubController {
       branch,
     });
   }
+
+  deletePreviousIssueComments({number, botName}) {
+    return this._github.issues.getComments({
+      owner: this._owner,
+      repo: this._repo,
+      number,
+    })
+    .then((issueCommentsData) => {
+      const issueComments = issueCommentsData.data;
+      const userIssues = issueComments.filter((issueComment) => {
+        return (issueComment.user.login === botName);
+      });
+    });
+  }
 }
 
 module.exports = GithubController;

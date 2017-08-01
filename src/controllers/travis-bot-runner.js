@@ -41,6 +41,10 @@ class TravisBot {
         return this._runPlugins(configuration.plugins, {beforePath, afterPath});
       })
       .then((pluginResults) => {
+        githubController.deletePreviousIssueComments({
+          number: '1',
+        })
+
         if (!travisEnv.isTravis || !travisEnv.isPullRequest) {
           this._logDebugInfo(pluginResults);
           return Promise.resolve();
@@ -176,9 +180,14 @@ class TravisBot {
       githubComment += `\n\n`;
     });
 
-    return githubController.postIssueComment({
+    return githubController.deletePreviousIssueComments({
       number: travisEnv.pullRequestNumber,
-      comment: githubComment,
+    })
+    .then(() => {
+      return githubController.postIssueComment({
+        number: travisEnv.pullRequestNumber,
+        comment: githubComment,
+      });
     });
   }
 }
