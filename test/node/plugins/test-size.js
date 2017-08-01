@@ -96,7 +96,7 @@ new-file.txt  21 B
 | empty-to-content.txt | 0 B        | 38 B       | +Infinity% | ☠️ |
 | empty.txt            | 0 B        | 0 B        |            | |
 | minor-change.txt     | 7.126 KB   | 7.125 KB   | -0.01%     | |
-| new-file.txt         | null B     | 21 B       |            | |
+| new-file.txt         |            | 21 B       |            | |
 | stays-the-same.txt   | 29 B       | 50 B       | +72.41%    | ☠️ |
 
 </details>`);

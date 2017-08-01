@@ -99,6 +99,10 @@ class SizePlugin extends PluginInterface {
   }
 
   static _convertSize(sizeInBytes) {
+    if (typeof sizeInBytes !== 'number') {
+      return null;
+    }
+
     let fileSize = sizeInBytes;
     let unit = 'B';
     if (fileSize >= 1000) {
@@ -143,7 +147,7 @@ class SizePlugin extends PluginInterface {
 
       return [
         chalk.yellow(fileInfo.relativePath),
-        chalk.dim(`${prevSizeDetails.size} ${prevSizeDetails.unit}`),
+        prevSizeDetails ? chalk.dim(`${prevSizeDetails.size} ${prevSizeDetails.unit}`): '',
         chalk.dim(`>`),
         chalk.blue(`${newSizeDetails.size} ${newSizeDetails.unit}`),
         percentString
@@ -274,7 +278,7 @@ ${fullTable}
 
       return [
         fileInfo.relativePath,
-        `${prevSizeDetails.size} ${prevSizeDetails.unit}`,
+        prevSizeDetails ? `${prevSizeDetails.size} ${prevSizeDetails.unit}` : '',
         `${newSizeDetails.size} ${newSizeDetails.unit}`,
         percentString,
         emoji
