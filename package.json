@@ -1,6 +1,6 @@
 {
   "name": "travis-bot",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "A bot to run after Travis has run it's build's and tests.",
   "main": "src/npm-module.js",
   "bin": {
