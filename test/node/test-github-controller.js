@@ -221,7 +221,7 @@ describe('github-controller', function() {
     const EXAMPLE_BOT_NAME = `example-bot-name`;
     const controller = new GithubController({owner: 'example-owner', repo: 'example-repo'});
 
-    const getStub = sinon.stub(controller._github.issues, 'getComments').callsFake(() => {
+    const getStub = sinon.stub(controller._github.issues, 'listComments').callsFake(() => {
       return Promise.resolve({
         data: [
           {
