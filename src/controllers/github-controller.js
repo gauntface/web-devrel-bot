@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const GitHubApi = require('github');
+const Octokit = require('@octokit/rest');
 const logHelper = require('../utils/log-helper');
 
 class GithubController {
@@ -24,11 +24,8 @@ class GithubController {
       throw new Error(`No 'GITHUB_TOKEN' environment variable defined.`);
     }
 
-    this._github = new GitHubApi();
-    // Can this be type of 'token' ?
-    this._github.authenticate({
-      type: 'oauth',
-      token: token,
+    this._github = new Octokit({
+      auth: token,
     });
 
     this._owner = owner;
@@ -67,7 +64,7 @@ class GithubController {
    * Get the details for a specific PR
    */
   getPRDetails({number}) {
-    return this._github.pullRequests.get({
+    return this._github.pulls.get({
       owner: this._owner,
       repo: this._repo,
       number,
@@ -90,7 +87,7 @@ class GithubController {
   }
 
   deletePreviousIssueComments({number, botName}) {
-    return this._github.issues.getComments({
+    return this._github.issues.listComments({
       owner: this._owner,
       repo: this._repo,
       number,
