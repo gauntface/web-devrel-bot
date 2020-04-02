@@ -22,7 +22,7 @@
   "homepage": "https://github.com/gauntface/web-devrel-bot#readme",
   "dependencies": {
     "@octokit/rest": "^16.43.1",
-    "chalk": "^3.0.0",
+    "chalk": "^4.0.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
     "meow": "^6.0.0"
