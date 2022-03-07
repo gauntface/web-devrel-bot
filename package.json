@@ -28,7 +28,7 @@
     "meow": "^6.0.0"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
+    "chai": "4.3.6",
     "mocha": "^7.0.1",
     "nyc": "^15.0.0",
     "proxyquire": "^2.1.3",
